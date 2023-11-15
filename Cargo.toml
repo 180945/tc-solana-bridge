@@ -1,0 +1,30 @@
+[package]
+name = "tc-solana-bridge"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+solana-program = "1.17.5"
+thiserror = "1.0.29"
+spl-token = {version = "4.0.0", features = ["no-entrypoint"]}
+arrayref = "0.3.6"
+borsh = "0.10"
+spl-associated-token-account = {version = "2.2.0", features = ["no-entrypoint"]}
+serde = "1.0.192"
+serde_json = "1.0.108"
+
+[features]
+test-bpf = []
+
+[dev-dependencies]
+assert_matches = "1.5.0"
+solana-program-test = "1.17.5"
+solana-sdk = "1.17.5"
+solana-validator = "1.17.5"
+solana-logger = "1.17.5"
+
+
+[lib]
+crate-type = ["cdylib", "lib"]
