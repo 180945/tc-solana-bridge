@@ -7,17 +7,17 @@ use crate::error::BridgeError::{
     InvalidInstruction,
     InstructionUnpackError
 };
-use crate::state::{TcOwners, WithdrawRequest};
+use crate::state::{TcOwners, WithdrawRequest, OwnerInit};
 use std::{convert::TryInto};
 
 pub enum BridgeInstruction {
 
-    ///   Request new shield to move token from Solana -> TC.
+    ///   Request new deposit to move token from Solana -> TC.
     ///
-    ///   0. `[writable]` Token account to make shield request
+    ///   0. `[writable]` Token account to make deposit request
     ///   1. `[writable]` Vault token account to receive token from asker
     ///   2. `[]` Incognito proxy which stores beacon list and bump seed to retrieve vault token account
-    ///   3. `[signer]` Shield maker address
+    ///   3. `[signer]` Deposit maker address
     ///   4. `[]` Spl Token program id
     Deposit {
         /// deposit info
@@ -28,12 +28,12 @@ pub enum BridgeInstruction {
     ///   Request new withdraw to move token from TC -> Solana.
     ///
     ///   0. `[writable]` Vault token account to transfer tokens to withdraw maker
-    ///   1. `[]` Unshield maker address
+    ///   1. `[]` Withdraw maker address
     ///   2. `[]` $vault_authority derived from `create_program_address(&[incognito proxy account])`
     ///   3. `[writable]` pda account to mark burn id already used
     ///   4. `[]` Incognito proxy which stores beacon list and bump seed to retrieve vault token account
     ///   5. `[]` Spl Token program id
-    ///   6. `[writable]` Associated token account of unshield maker
+    ///   6. `[writable]` Associated token account of withdraw maker
     ///   7. `[signer]` Fee payer for pda account which stores tx id
     ///   8. `[]` System program to create pda account
     Withdraw {
@@ -48,7 +48,7 @@ pub enum BridgeInstruction {
     ///   2. `[writable]` Vault account
     InitOwners {
         /// beacon info
-        init_beacon_info: TcOwners,
+        init_beacon_info: OwnerInit,
     }
 }
 
@@ -94,7 +94,6 @@ impl BridgeInstruction {
                 }
             },
             2 => {
-                let (bump_seed, rest) = Self::unpack_u8(rest)?;
                 let (beacon_list_len, mut rest) =  Self::unpack_u8(rest)?;
                 let mut beacons = Vec::with_capacity(beacon_list_len as usize + 1);
                 for _ in 0..beacon_list_len {
@@ -104,9 +103,7 @@ impl BridgeInstruction {
                     beacons.push(new_beacon);
                 }
                 Self::InitOwners {
-                    init_beacon_info: TcOwners{
-                        is_initialized: true,
-                        bump_seed,
+                    init_beacon_info: OwnerInit{
                         beacons
                     }   
                 }

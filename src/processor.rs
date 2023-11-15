@@ -20,7 +20,7 @@ use borsh::{BorshSerialize};
 use spl_token::state::Account as TokenAccount;
 use crate::{error::BridgeError, instruction::BridgeInstruction, state::{WithdrawRequest, TcOwners, Nonces}};
 use spl_associated_token_account::{get_associated_token_address};
-use crate::state::SignData;
+use crate::state::{OwnerInit, SignData};
 
 pub fn process_instruction(
         program_id: &Pubkey,
@@ -56,10 +56,10 @@ fn process_deposit(
     let vault_token_account = next_account_info(account_info_iter)?;
     let vault_program_owners_id = next_account_info(account_info_iter)?;
     let depositor = next_account_info(account_info_iter)?;
+    let token_program = next_account_info(account_info_iter)?;
     if !depositor.is_signer {
         return Err(ProgramError::MissingRequiredSignature);
     }
-    let token_program = next_account_info(account_info_iter)?;
 
     if vault_program_owners_id.owner != program_id {
         msg!("Invalid tc owners program");
@@ -189,7 +189,7 @@ fn process_withdraw(
         if token_id == spl_token::native_mint::id() {
             // handle native token
             if *vault_token_account.key == *accounts_info[i].clone().key {
-                msg!("Invalid sender and receiver in unshield request");
+                msg!("Invalid sender and receiver in withdraw request");
                 return Err(BridgeError::InvalidTransferTokenData.into());
             }
             // close account
@@ -209,7 +209,7 @@ fn process_withdraw(
 // add logic to proccess init beacon list
 fn process_init_beacon(
     accounts: &[AccountInfo],
-    init_beacon_info: TcOwners,
+    init_beacon_info: OwnerInit,
     program_id: &Pubkey,
 ) -> ProgramResult {
     let account_info_iter = &mut accounts.iter();

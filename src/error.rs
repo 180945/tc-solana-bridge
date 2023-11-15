@@ -60,8 +60,8 @@ pub enum BridgeError {
     /// Invalid pda account.
     #[error("Invalid pda account to mark tx burned")]
     InvalidPDAAccount,
-    /// Unshield request used.
-    #[error("Unshield request used")]
+    /// Withdraw request used.
+    #[error("Withdraw request used")]
     InvalidUnshieldRequestUsed,
     /// Invalid signer.
     #[error("Invalid signer")]
@@ -72,7 +72,7 @@ pub enum BridgeError {
     /// Invalid meta type.
     #[error("Invalid meta type")]
     InvalidMetaType,
-    /// The vault pda account for unshield reached max capacity.
+    /// The vault pda account for withdraw reached max capacity.
     #[error("Vault pda reached max capacity")]
     InvalidVaultAccount,
     /// The authority account is not signer.
