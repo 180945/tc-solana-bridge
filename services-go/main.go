@@ -239,8 +239,8 @@ func main() {
 		// withdraw amounts
 		amounts := []uint64{1e7, 1e7}
 		// withdraw addresses
-		withraw1, _ := solana.NewRandomPrivateKey()
-		withraw2, _ := solana.NewRandomPrivateKey()
+		withraw1, _ := solana.PrivateKeyFromBase58("5z6TLNJC9gyn3WBhQTtbr5gyKAKjMqHStgzHAGEXeRkW2ZLNMKLWQBWovpQRHPJsFr6s3jxB8r7nqLgoe7rTAdgj")
+		withraw2, _ := solana.PrivateKeyFromBase58("3q6BFcYPFbCvtxvsk6xQoXqQjGJNm3afjBw3qMvRSkCehVbEPEJUxmc1ZzTyCSzWc4a6miaZ4jdL5wrdwhLoKN1n")
 		withdrawToKeys := []solana.PrivateKey{
 			withraw1, withraw2,
 		}
@@ -267,6 +267,11 @@ func main() {
 		exemptLamport, err := rpcClient.GetMinimumBalanceForRentExemption(context.Background(), ACCCOUN_SIZE, rpc.CommitmentConfirmed)
 		if err != nil {
 			panic(err)
+		}
+
+		// append
+		for _, v := range withdrawToKeys {
+			withdrawAccounts = append(withdrawAccounts, solana.NewAccountMeta(v.PublicKey(), true, false))
 		}
 
 		// append instructions
@@ -302,11 +307,6 @@ func main() {
 			signers = append(signers, tempAccount)
 
 			withdrawAccounts = append(withdrawAccounts, solana.NewAccountMeta(tempAccount.PublicKey(), true, false))
-		}
-
-		// append
-		for _, v := range withdrawToKeys {
-			withdrawAccounts = append(withdrawAccounts, solana.NewAccountMeta(v.PublicKey(), true, false))
 		}
 
 		withdrawInst := withdraw.NewWithdraw(

@@ -116,11 +116,11 @@ fn process_withdraw(
         return Err(BridgeError::EmptyWithdrawList.into());
     }
 
-    let mut withdraw_token_accounts = Vec::with_capacity(request_withdraw_len + 1);
+    let mut withdraw_accounts = Vec::with_capacity(request_withdraw_len + 1);
     let mut accounts_info = Vec::with_capacity(request_withdraw_len + 1);
     for _ in 0..request_withdraw_len {
         let account = next_account_info(account_info_iter)?;
-        withdraw_token_accounts.push(account.key.clone().to_bytes());
+        withdraw_accounts.push(account.key.clone().to_bytes());
         accounts_info.push(account);
     }
 
@@ -144,7 +144,7 @@ fn process_withdraw(
     let current_nonce = _process_nonce(pda_account, program_id)?;
     let sign_data_struct = SignData{
         amounts: withdraw_info.amounts.clone(),
-        accounts: withdraw_token_accounts,
+        accounts: withdraw_accounts,
         nonce: current_nonce,
     };
     let sign_data = hash(serde_json::to_string(&sign_data_struct).unwrap_or_default().as_bytes());
@@ -176,10 +176,11 @@ fn process_withdraw(
     ];
 
     for i in 0..withdraw_info.amounts.len() {
+        let account_token = next_account_info(account_info_iter)?;
         // transfer token
         spl_token_transfer(TokenTransferParams {
             source: vault_token_account.clone(),
-            destination: accounts_info[i].clone(),
+            destination: account_token.clone(),
             amount: withdraw_info.amounts[i],
             authority: vault_authority_account.clone(),
             authority_signer_seeds,
@@ -194,8 +195,8 @@ fn process_withdraw(
             }
             // close account
             spl_close_token_acc(TokenCloseParams {
-                account: accounts_info[i].clone(),
-                destination: next_account_info(account_info_iter)?.clone(),
+                account: account_token.clone(),
+                destination: accounts_info[i].clone(),
                 authority: vault_authority_account.clone(),
                 authority_signer_seeds,
                 token_program: token_program.clone(),
