@@ -168,3 +168,25 @@ pub struct SignData {
     // nonce
     pub nonce: u64
 }
+
+// test
+#[cfg(test)]
+mod tests {
+    use crate::state::SignData;
+
+    #[test]
+    fn print_sign_data() {
+        let amounts: [u64; 2] = [1,2];
+        let account1: [u8; 32] = [130,130,145,153,93,114,117,199,108,190,233,244,53,240,247,48,207,19,94,245,14,171,207,124,157,177,173,139,253,237,36,168];
+        let account2: [u8; 32] = [123,130,145,153,93,114,117,199,108,190,233,244,53,240,247,48,207,19,94,245,14,171,207,124,157,177,173,139,253,237,36,168];
+        let accounts = [account1, account2];
+
+        let sign_data = SignData{
+            amounts: amounts.to_vec(),
+            accounts: accounts.to_vec(),
+            nonce: 1,
+        };
+
+        println!("{:?}", serde_json::to_string(&sign_data).unwrap_or_default())
+    }
+}

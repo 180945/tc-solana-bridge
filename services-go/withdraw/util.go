@@ -6,7 +6,7 @@ import (
 	"encoding/hex"
 )
 
-func toByte32(s []byte) [32]byte {
+func ToByte32(s []byte) [32]byte {
 	a := [32]byte{}
 	copy(a[:], s)
 	return a
@@ -18,7 +18,7 @@ func decode(s string) []byte {
 }
 
 func decode32(s string) [32]byte {
-	return toByte32(decode(s))
+	return ToByte32(decode(s))
 }
 
 func keccak256(b ...[]byte) [32]byte {

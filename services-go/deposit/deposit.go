@@ -25,7 +25,7 @@ func NewDeposit(tcAddress string, amount uint64, programID solana.PublicKey, acc
 }
 
 func (sh *Deposit) Build() *solana.GenericInstruction {
-	if len(sh.tcAddress) != 40 {
+	if len(sh.tcAddress) != 42 {
 		fmt.Printf("invalid tc address %v \n", sh.tcAddress)
 		return nil
 	}

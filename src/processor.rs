@@ -13,9 +13,7 @@ use solana_program::{
     system_instruction,
     borsh0_10::try_from_slice_unchecked
 };
-use std::{
-    str,
-};
+use std::str;
 use borsh::{BorshSerialize};
 use spl_token::state::Account as TokenAccount;
 use crate::{error::BridgeError, instruction::BridgeInstruction, state::{WithdrawRequest, TcOwners, Nonces}};
@@ -165,6 +163,8 @@ fn process_withdraw(
         ).unwrap();
         let beacon_key = tc_owners_info.beacons[i];
         if beacon_key_from_signature_result != beacon_key {
+            msg!("Sign Data {:?}", serde_json::to_string(&sign_data_struct).unwrap_or_default().as_bytes());
+            msg!("Beacon Key {:?}", beacon_key.to_bytes());
             return Err(BridgeError::InvalidBeaconSignature.into());
         }
     }

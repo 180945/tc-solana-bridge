@@ -7,7 +7,7 @@ use crate::error::BridgeError::{
     InvalidInstruction,
     InstructionUnpackError
 };
-use crate::state::{TcOwners, WithdrawRequest, OwnerInit};
+use crate::state::{WithdrawRequest, OwnerInit};
 use std::{convert::TryInto};
 
 pub enum BridgeInstruction {

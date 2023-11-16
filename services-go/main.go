@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/180945/tc-contracts/services-go/deposit"
 	"github.com/180945/tc-contracts/services-go/owners"
+	"github.com/180945/tc-contracts/services-go/withdraw"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/gagliardetto/solana-go"
 	associatedtokenaccount "github.com/gagliardetto/solana-go/programs/associated-token-account"
@@ -138,11 +139,11 @@ func main() {
 		program,
 	)
 
-	if true {
+	if false {
 		fmt.Println("============ TEST DEPOSIT TOKEN TO BRIDGE =============")
 		depositInsts := []solana.Instruction{}
 		solAmount := uint64(1e8) // 0.1 sol
-		tcAddress := "dafea492d9c6733ae3d56b7ed1adb60692c98bc5"
+		tcAddress := "0xdafea492d9c6733ae3d56b7ed1adb60692c98bc5"
 		signers := []solana.PrivateKey{
 			feePayer,
 		}
@@ -221,6 +222,115 @@ func main() {
 			panic(err)
 		}
 		spew.Dump(sig)
+	}
+
+	if true {
+		fmt.Println("============ TEST WITHDRAW TOKEN TO BRIDGE =============")
+		withdrawInsts := []solana.Instruction{}
+		signers := []solana.PrivateKey{
+			feePayer,
+		}
+		ownerKyes := []string{
+			"aad53b70ad9ed01b75238533dd6b395f4d300427da0165aafbd42ea7a606601f",
+			"ca71365ceddfa8e0813cf184463bd48f0b62c9d7d5825cf95263847628816e82",
+			"1e4d2244506211200640567630e3951abadbc2154cf772e4f0d2ff0770290c7c",
+			"c7146b500240ed7aac9445e2532ae8bf6fc7108f6ea89fde5eebdf2fb6cefa5a",
+		}
+		// withdraw amounts
+		amounts := []uint64{1e7, 1e7}
+		// withdraw addresses
+		withraw1, _ := solana.NewRandomPrivateKey()
+		withraw2, _ := solana.NewRandomPrivateKey()
+		withdrawToKeys := []solana.PrivateKey{
+			withraw1, withraw2,
+		}
+
+		withdrawAddresses := [][32]byte{
+			withdraw.ToByte32(withraw1.PublicKey().Bytes()), withdraw.ToByte32(withraw2.PublicKey().Bytes()),
+		}
+
+		vaultNativeTokenAcc, _, _ := solana.FindAssociatedTokenAddress(
+			vaultTokenAuthority,
+			solana.SolMint,
+		)
+
+		// withdraw account
+		withdrawAccounts := []*solana.AccountMeta{
+			solana.NewAccountMeta(vaultNativeTokenAcc, true, false),
+			solana.NewAccountMeta(vaultTokenAuthority, false, false),
+			solana.NewAccountMeta(nonceProgram, true, false),
+			solana.NewAccountMeta(tcOwners, false, false),
+			solana.NewAccountMeta(solana.TokenProgramID, false, false),
+			solana.NewAccountMeta(feePayer.PublicKey(), true, false),
+		}
+
+		exemptLamport, err := rpcClient.GetMinimumBalanceForRentExemption(context.Background(), ACCCOUN_SIZE, rpc.CommitmentConfirmed)
+		if err != nil {
+			panic(err)
+		}
+
+		// append instructions
+		for _, _ = range amounts {
+			tempAccount, _ := solana.NewRandomPrivateKey()
+			if err != nil {
+				panic(err)
+			}
+
+			// init new account
+			newAccount := system.NewCreateAccountInstruction(
+				exemptLamport,
+				ACCCOUN_SIZE,
+				solana.TokenProgramID,
+				feePayer.PublicKey(),
+				tempAccount.PublicKey(),
+			).Build()
+
+			// build create new token acc
+			newAccTokenInst := solana.NewInstruction(
+				solana.TokenProgramID,
+				[]*solana.AccountMeta{
+					solana.NewAccountMeta(tempAccount.PublicKey(), true, false),
+					solana.NewAccountMeta(solana.SolMint, false, false),
+					solana.NewAccountMeta(vaultTokenAuthority, false, false),
+					solana.NewAccountMeta(solana.SysVarRentPubkey, false, false),
+				},
+				[]byte{NEW_TOKEN_ACC},
+			)
+
+			withdrawInsts = append(withdrawInsts, newAccount)
+			withdrawInsts = append(withdrawInsts, newAccTokenInst)
+			signers = append(signers, tempAccount)
+
+			withdrawAccounts = append(withdrawAccounts, solana.NewAccountMeta(tempAccount.PublicKey(), true, false))
+		}
+
+		// append
+		for _, v := range withdrawToKeys {
+			withdrawAccounts = append(withdrawAccounts, solana.NewAccountMeta(v.PublicKey(), true, false))
+		}
+
+		withdrawInst := withdraw.NewWithdraw(
+			ownerKyes,
+			amounts,
+			withdrawAddresses,
+			0, // todo:: get from contract
+			program,
+			withdrawAccounts,
+		)
+
+		withdrawInsts = append(withdrawInsts, withdrawInst.Build())
+
+		tx5, err := solana.NewTransaction(
+			withdrawInsts,
+			recent.Value.Blockhash,
+			solana.TransactionPayer(feePayer.PublicKey()),
+		)
+		sig, err := SignAndSendTx(tx5, signers, rpcClient)
+		if err != nil {
+			panic(err)
+		}
+		spew.Dump(sig)
+
 	}
 }
 
