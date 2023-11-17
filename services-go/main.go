@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"encoding/binary"
 	"fmt"
 	"github.com/180945/tc-contracts/services-go/deposit"
 	"github.com/180945/tc-contracts/services-go/owners"
@@ -309,11 +310,20 @@ func main() {
 			withdrawAccounts = append(withdrawAccounts, solana.NewAccountMeta(tempAccount.PublicKey(), true, false))
 		}
 
+		// get nonce from program
+		nonceProgramInfo, err := rpcClient.GetAccountInfo(context.TODO(), nonceProgram)
+		if err != nil {
+			panic(err)
+		}
+		// 1 byte init + 8 bytes nonce
+		nonce := binary.LittleEndian.Uint64(nonceProgramInfo.Bytes()[1:])
+		fmt.Printf("nonce: %v \n", nonce)
+
 		withdrawInst := withdraw.NewWithdraw(
 			ownerKyes,
 			amounts,
 			withdrawAddresses,
-			0, // todo:: get from contract
+			nonce,
 			program,
 			withdrawAccounts,
 		)
