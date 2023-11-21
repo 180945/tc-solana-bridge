@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 	"github.com/180945/tc-contracts/services-go/deposit"
 	"github.com/180945/tc-contracts/services-go/owners"
@@ -59,7 +60,7 @@ func main() {
 	//}
 
 	// Create a new RPC client:
-	rpcClient := rpc.New(rpc.DevNet_RPC)
+	rpcClient := rpc.New(rpc.MainNetBeta_RPC)
 
 	// test deposit tx
 	recent, err := rpcClient.GetRecentBlockhash(context.Background(), rpc.CommitmentFinalized)
@@ -94,7 +95,7 @@ func main() {
 	}
 
 	// @Note: turn this off if initialized
-	if false {
+	if true {
 		fmt.Println("============ TEST INIT TC OWNER LIST =============")
 		initOwnerInsts := []solana.Instruction{}
 		initOwnerAccounts := []*solana.AccountMeta{
@@ -107,12 +108,21 @@ func main() {
 			feePayer,
 		}
 
+		ownersStr := []string{
+			"6aa595813d5d7866f8a891630b4123e718715669acb0fd6fe2f7c46dfb8a322f6dcfc1880910404760bbfa373e66cc26355fb79699316a061c4b018a6852d1ea",
+			"7bb0fb6727892bde8acefb3b7e2d77d7014169385e38d2ce04694603d0432a94d518ef3def8ca1eb8e8a4cbc4673f7c809ea8a3794a855e7846febcdd5747288",
+			"7a5ad8fcaafcc7defc4fdf3a82f487016ee8665f918d10540b9faf4196d02561933ea8856919e43c335b08862a059535caaa781b2902296eada8f5114fdad778",
+			"59faeba475d6eea29653f50949a4b33d65fd063b3259a5d4ea9999e715bf8fb564a9ffb1656ca8638622e114dfbb2935dc7cfd1f35a477d979ee04579617ab36",
+			"b2270335e1ef2a2be3565f673ec35eb5ae7c41ad132a4d30b96e870f7aaa45b32f428cf950cdafb588774f30a91f7459395df5e4f321ef6aa3c4e8a0d43fdd48",
+			"f8651fb2be5886101f78a65f1d8cd838b740560b2bf40c5d794d9fca13f576493e15e79f96a8ebb6969c6a00386b7f6486f7ed3ac04ea888f9b9009f634d99b8",
+			"6b5f0bc200b94dd826afba0fde6a892058def9ce5df72e091d35fbaafd37b5dcfb7a370bcee545665153d54650ee6dd2862c0ab0e1fe394648bb0fab195be57f",
+		}
+
 		// list owner
-		ownersPubKey := [][]byte{
-			{64, 206, 253, 84, 56, 206, 63, 162, 157, 152, 148, 80, 198, 23, 66, 245, 43, 1, 207, 238, 9, 144, 161, 139, 131, 44, 146, 136, 74, 242, 22, 220, 187, 130, 145, 153, 93, 114, 117, 199, 108, 190, 233, 244, 53, 240, 247, 48, 207, 19, 94, 245, 14, 171, 207, 124, 157, 177, 173, 139, 253, 237, 36, 168},
-			{175, 109, 126, 18, 52, 108, 137, 78, 38, 252, 216, 214, 224, 214, 44, 187, 2, 67, 70, 204, 196, 78, 155, 224, 72, 126, 124, 128, 134, 165, 210, 158, 138, 93, 62, 90, 76, 225, 186, 39, 215, 204, 170, 10, 127, 99, 86, 220, 107, 251, 34, 58, 235, 236, 69, 189, 235, 226, 57, 208, 106, 210, 28, 22},
-			{122, 69, 179, 100, 37, 117, 17, 36, 0, 4, 211, 125, 150, 102, 106, 180, 218, 127, 238, 200, 104, 84, 250, 183, 23, 31, 209, 229, 22, 117, 248, 73, 56, 120, 112, 2, 188, 187, 152, 44, 70, 228, 25, 160, 250, 255, 40, 216, 180, 239, 183, 235, 175, 79, 66, 41, 119, 82, 195, 70, 103, 102, 135, 73},
-			{24, 171, 11, 173, 118, 80, 213, 52, 20, 186, 77, 213, 182, 249, 188, 70, 15, 37, 228, 129, 102, 45, 183, 139, 139, 174, 147, 32, 130, 179, 168, 171, 36, 79, 30, 237, 44, 11, 200, 229, 108, 224, 117, 224, 206, 11, 62, 235, 127, 101, 194, 116, 209, 213, 122, 41, 77, 229, 19, 60, 199, 168, 81, 25},
+		ownersPubKey := [][]byte{}
+		for i := 0; i < len(ownersStr); i++ {
+			owner, _ := hex.DecodeString(ownersStr[i])
+			ownersPubKey = append(ownersPubKey, owner)
 		}
 
 		// build tx
@@ -225,7 +235,7 @@ func main() {
 		spew.Dump(sig)
 	}
 
-	if true {
+	if false {
 		fmt.Println("============ TEST WITHDRAW TOKEN TO BRIDGE =============")
 		withdrawInsts := []solana.Instruction{}
 		signers := []solana.PrivateKey{

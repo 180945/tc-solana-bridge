@@ -148,6 +148,7 @@ fn process_withdraw(
         nonce: current_nonce,
     };
     let sign_data = hash(serde_json::to_string(&sign_data_struct).unwrap_or_default().as_bytes());
+    let mut last_beacon_index = 0usize;
 
     for i in 0..withdraw_info.signatures.len() {
         let s_r_v = withdraw_info.signatures[i];
@@ -161,10 +162,18 @@ fn process_withdraw(
             v[0],
             s_r,
         ).unwrap();
-        let beacon_key = tc_owners_info.beacons[i];
-        if beacon_key_from_signature_result != beacon_key {
-            msg!("Sign Data {:?}", serde_json::to_string(&sign_data_struct).unwrap_or_default().as_bytes());
-            msg!("Beacon Key {:?}", beacon_key.to_bytes());
+
+        let mut is_valid = false;
+        for j in last_beacon_index..tc_owners_info.beacons.len() {
+            let beacon_key = tc_owners_info.beacons[j];
+            if beacon_key_from_signature_result == beacon_key {
+                last_beacon_index = j;
+                is_valid = true;
+                break;
+            }
+        }
+
+        if !is_valid {
             return Err(BridgeError::InvalidBeaconSignature.into());
         }
     }
